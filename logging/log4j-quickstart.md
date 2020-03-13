@@ -2,7 +2,7 @@
 
 ### 基本使用方式
 使用自带的实现，基本步骤如下：
-1. 引入Log4j的jar，包括API和实现。
+- 引入Log4j的jar，包括API和实现。
 
 ```xml
 <dependencies>
@@ -19,7 +19,7 @@
 </dependencies>
 ```
 
-2. 在代码中使用Logger对象来产生日志事件。典型的方式是，每个类一个静态的Logger。
+- 在代码中使用Logger对象来产生日志事件。典型的方式是，每个类一个静态的Logger。
 
 ```java
 public class A {
@@ -28,4 +28,4 @@ public class A {
 }
 ```
 
-3. 设计配置文件[参考](log4j)
+- [书写配置文件](log4j)
