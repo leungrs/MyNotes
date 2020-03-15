@@ -33,7 +33,25 @@ Log4j 2 API就是一个日志门面，除了可以和Log4j的实现一起使用�
 #### 自动配置
 
 Log4j能够在应用初始化的时候，自动配置好自己。Log4j会定位到类路径下所有的ConfigurationFactory插件，按照权重从高到低排好序。
-Log4j自带有4个ConfigurationFactory的插件实现，分别对应四种不同格式的配置文件。Log4j的自动配置过程如下：
+Log4j自带有4个ConfigurationFactory的插件实现，分别对应四种不同格式的配置文件。
+如果使用json格式，那么必须包含下面依赖：
+```xml
+<dependency>
+  <groupId>com.fasterxml.jackson.core</groupId>
+  <artifactId>jackson-databind</artifactId>
+  <version>2.10.3</version>
+</dependency>
+```
+如果使用yaml格式，那么必须包含下面依赖：
+```xml
+<dependency>
+  <groupId>com.fasterxml.jackson.dataformat</groupId>
+  <artifactId>jackson-dataformat-yaml</artifactId>
+  <version>2.10.3</version>
+</dependency>
+```
+
+Log4j的自动配置过程如下：
 - 系统属性log4j.configurationFile存在，使用与该文件扩展名匹配的ConfigurationFactory加载该文件的配置。
 - 不存在上述系统属性，类路径是否存在properties格式文件：log4j-test.properties
 - 不存在properties文件，是否存在YAML格式配置文件：log4j-test.yaml或者log4j-test.yml
@@ -68,10 +86,10 @@ Log4j自带有4个ConfigurationFactory的插件实现，分别对应四种不同
 ```
 
 ##### 整体结构
-xml配置有精简模式和严格模式两种。
+xml配置有精简模式和严格模式两种。经过测试发现，严格模式下，也可以使用精简模式的配置。但是精简模式下，不能使用严格模式的配置。
 
 精简模式下，一些组件直接使用简单的元素就可以表示，比如Console的Appender，
-直接使用Console元素就可以。
+直接使用Console元素就可以。**元素以及属性的名字不区分大小写**。
 
 严格模式下可以使用schema来进行验证，不过写起来就比较繁琐一些。比如Console的Appender，
 必须使用Appender元素，指定type=Console等等。
@@ -313,3 +331,130 @@ Log4j使用了很多的系统属性来控制它的行为，这些系统属性有
 2. 属性文件指的是类路径下的这个文件：log4j2.component.properties。
 3. 常规系统属性也就是-Dname=value指定的属性，优先级最低，可被其他两种来源的属性覆盖。
 
+#### JSON配置方式
+```json
+{
+  "configuration": {
+    "status": "debug",
+    "properties": {
+      "property": {"name": "filename", "value": "/usr/local/test.xml"},
+      "property": {"name": "username", "value": "Steven Jobs"}
+    },
+    "ThreholdFilter": {"level", "debug"},
+    "appenders": {
+      "Console": {
+        "name": "STDOUT",
+        "PatternLayout": {"pattern": "???%m%n"}
+      },
+      "appender": [
+        {
+          "type": "Console", 
+          "name": "STDOUT1", 
+          "PatternLayout": {
+            "pattern": "===%m%n"
+          }
+        }
+      ]
+    },
+    "loggers": {
+      "logger": [
+        {"name": "EventLogger", "level": "debug", "additivity": "false"},
+        {"name": "AnotherLogger", "level":"warn", "appenderRef": {"ref": "STDOUT1"}}
+      ],
+      "root": {"level":"trace", "appenderRef": {"ref":"STDOUT"}}
+    }
+  }
+}
+```
+
+#### properties配置方式
+```properties
+status = error
+dest = err
+name = PropertiesConfig
+ 
+property.filename = target/rolling/rollingtest.log
+ 
+filter.threshold.type = ThresholdFilter
+filter.threshold.level = debug
+ 
+appender.console.type = Console
+appender.console.name = STDOUT
+appender.console.layout.type = PatternLayout
+appender.console.layout.pattern = %m%n
+appender.console.filter.threshold.type = ThresholdFilter
+appender.console.filter.threshold.level = error
+ 
+appender.rolling.type = RollingFile
+appender.rolling.name = RollingFile
+appender.rolling.fileName = ${filename}
+appender.rolling.filePattern = target/rolling2/test1-%d{MM-dd-yy-HH-mm-ss}-%i.log.gz
+appender.rolling.layout.type = PatternLayout
+appender.rolling.layout.pattern = %d %p %C{1.} [%t] %m%n
+appender.rolling.policies.type = Policies
+appender.rolling.policies.time.type = TimeBasedTriggeringPolicy
+appender.rolling.policies.time.interval = 2
+appender.rolling.policies.time.modulate = true
+appender.rolling.policies.size.type = SizeBasedTriggeringPolicy
+appender.rolling.policies.size.size=100MB
+appender.rolling.strategy.type = DefaultRolloverStrategy
+appender.rolling.strategy.max = 5
+ 
+logger.rolling.name = com.example.my.app
+logger.rolling.level = debug
+logger.rolling.additivity = false
+logger.rolling.appenderRef.rolling.ref = RollingFile
+ 
+rootLogger.level = info
+rootLogger.appenderRef.stdout.ref = STDOUT
+```
+
+#### YAML配置方式
+```yaml
+Configuration:
+  status: warn
+  name: YAMLConfigTest
+  properties:
+    property:
+      name: filename
+      value: target/test-yaml.log
+  thresholdFilter:
+    level: debug
+  appenders:
+    Console:
+      name: STDOUT
+      PatternLayout:
+        Pattern: "%m%n"
+    File:
+      name: File
+      fileName: ${filename}
+      PatternLayout:
+        Pattern: "%d %p %C{1.} [%t] %m%n"
+      Filters:
+        ThresholdFilter:
+          level: error
+ 
+  Loggers:
+    logger:
+      -
+        name: org.apache.logging.log4j.test1
+        level: debug
+        additivity: false
+        ThreadContextMapFilter:
+          KeyValuePair:
+            key: test
+            value: 123
+        AppenderRef:
+          ref: STDOUT
+      -
+        name: org.apache.logging.log4j.test2
+        level: debug
+        additivity: false
+        AppenderRef:
+          ref: File
+    Root:
+      level: error
+      AppenderRef:
+        ref: STDOUT
+          
+```
