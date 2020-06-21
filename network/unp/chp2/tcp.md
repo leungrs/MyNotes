@@ -86,4 +86,24 @@ TCP为一个连接定义了11种状态，并且规定了如何在当前状态下
 
 
 上面是正常情况下的转移图，极少情况下，会发生两端同时发送FIN的情况，此时两端都同时进入FIN_WAIT_1状态，收到对端的FIN后，并且发送ACK后，同时进入CLOSING状态，收到ACK后进入TIME_WAIT状态。
+也就是客户端和服务端的状态都是：
 
+FIN_WAIT_1 -> CLOSING -> TIME_WAIT -> CLOSED
+
+总结11中状态为：
+- CLOSED
+- LISTEN
+- SYN_SENT
+- SYN_RCVD
+- ESTABLISHED
+- FIN_WAIT_1
+- FIN_WAIT_2
+- CLOSE_WAIT
+- LAST_WAIT
+- TIME_WAIT
+- CLOSING
+
+#### TIME_WAIT状态
+TIME_WAIT状态存在的理由：
+- 可靠地实现TCP全双工连接的终止
+- 允许老的重复的分节在网络中消逝，因为处于TIME_WAIT状态的连接所占用的IP和端口号，不能被重复利用。
