@@ -22,3 +22,15 @@
 - htonl
 - ntohl
 - ntohs
+
+#### <sys/socket.h>
+包含如下socket函数：
+- socket(int family, int type, int protocol)
+- bind
+- accept
+
+
+#### <unistd.h>
+unix的标准头文件，包含如下函数定义：
+- fork
+- exec
