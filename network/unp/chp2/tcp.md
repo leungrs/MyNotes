@@ -104,6 +104,11 @@ FIN_WAIT_1 -> CLOSING -> TIME_WAIT -> CLOSED
 - CLOSING
 
 #### TIME_WAIT状态
-TIME_WAIT状态存在的理由：
-- 可靠地实现TCP全双工连接的终止
-- 允许老的重复的分节在网络中消逝，因为处于TIME_WAIT状态的连接所占用的IP和端口号，不能被重复利用。
+
+1. TIME_WAIT状态存在的两个理由
+    - 可靠地实现TCP全双工连接的终止
+    - 允许老的重复的分节在网络中消逝，因为处于TIME_WAIT状态的连接所占用的IP和端口号，不能被重复利用。
+
+2. TIME_WAIT状态持续的时间
+
+一般规定持续2MSL（maximum segment lifetime），也就是分节最长生命期的2倍。
