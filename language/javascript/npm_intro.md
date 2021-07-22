@@ -20,6 +20,50 @@ npm也就是node package manager的缩写，npm包含指下面三个组件：
 
 
 
+### npm如何的配置？
+
+npm执行命令时，按从高到低的优先级从如下6个地方获取配置：
+
+1. 命令行，如--proxy http://server:port，就将proxy的值设为http://server:port
+
+2. 环境变量，以npm_config_开头的环境变量，如npm_config_proxy=http://server:port
+
+3. 用户的配置文件，通过npm config get userconfig命令可以查看用户配置文件路径。如我本机上执行这个命令的输出结果如下：
+
+   ```
+   C:\Users\Administrator>npm config get userconfig
+   C:\Users\Administrator\.npmrc
+   ```
+
+   使用npm config set <key> <value> 设置的配置为用户级别的配置。
+
+4. 全局的配置文件，通过npm config get globalconfig可以获取全局配置文件路径
+
+   ```
+   C:\Users\Administrator>npm config get globalconfig
+   C:\Users\Administrator\AppData\Roaming\npm\etc\npmrc
+   ```
+
+   使用npm config set <key> <value>  --global设置的配置为全局级别的配置。
+
+5. 内置的配置文件，也就是npm安装目录下的npmrc文件
+
+6. 默认配置。npm本身有默认的配置参数，如果以上5条都没有对应的配置，就使用默认的。使用```npm config list -l```查看当前所有配置及默认配置。
+
+
+
+### npm的目录结构
+
+npm会把包安装到你机器上的不同位置，简单来说就是：
+
+1. 本地安装，就会在把包安装在当前路径下的node_modules文件夹下。
+2. 全局-g安装，就会把包安装到node的安装目录下。
+3. 如果你需要require它，那么就使用本地安装。
+4. 如果你需要在命令行里执行它，那么就全局安装。
+5. 如果两者都需要，那么就本地和全局都安装一下。
+
+
+
 ### node的包是什么？
 
 node的package可以是如下的任何一种形式：
@@ -38,25 +82,100 @@ node的package可以是如下的任何一种形式：
 
 
 
-### package.json文件
+### package.json文件是什么？
 
 这个文件包含很多配置内容，其中的许多内容又受到config配置的影响。常用的配置如下：
 
 1. name  和 version，包名和版本，如果需要publish的话，是必须的，否则也不是必须的。
-2. files，可选。用来执行哪些文件发布的时候是需要包含的。默认是所有的都包含。
+
+2. files，可选。用来指定哪些文件发布的时候是需要包含的，默认是所有的都包含。
+
 3. main，可选，默认为index.js。导出的主模块，别人require你的包时，导入的就是这个模块。
+
 4. browser，如果你的包只是为了在浏览器中使用，比如引用了window对象，那么就使用browser而不使用main
+
 5. bin，许多包都有一个或者多个可执行文件需要安装到PATH中，这个配置用来指向命令名和对应的js文件。
+
 6. scripts，是个字典，key为生命周期事件，值为执行的脚本，比如npm test 执行的脚本就在这里指定。
+
+   不指定scripts的话，scripts有如下的默认值：
+
+   ```javascript
+   "scripts": {
+       "start": "node server.js",
+       "install": "node-gyp rebuild"
+   }
+   ```
+
 7. dependencies，是一个字典，描述包的正式依赖。
+
 8. devDependencies，和7类似，描述只在开发阶段用到的依赖。
+
 9. peerDependencies，表示包可以和某个库或者宿主工具兼容，但并不强依赖它，必须可以作为它的一个插件。
+
 10. optionalDependencies， 可选的依赖。
-11. bundledDependencies，指定在npm pack是，需要一起打包进gzip文件中的package。
+
+11. bundledDependencies，指定在npm pack时，需要一起打包进gzip文件中的package。
+
 12. private，如果设置为false，那么就不能publish
+
 13. workspaces，可选。是一个文件模式的数组，用来设置一系列本地文件系统中的路径。
 
+14. directories: 指定package的lib, bin, docs，man等目录。
 
+### package.json中的scripts配置
+
+在scripts中用户可以指定任意的脚本，通过key-value的形式，key表示命令的名字，value是执行命令时真实的执行脚本。通过npm run key来执行对应的命令。
+
+
+
+处理用户自定义的脚本外，npm内置了一些命令的名字，npm在执行具体的任务时，如果发现scripts中定义了某个内置的命令名，那么它对应的脚本就会自动执行。这些一般叫做生命周期事件。这些内置的命令名有：
+
+- prepare：在执行npm pack打包一个tarball前、在本地执行一个不带参数的npm install前、在执行npm publish发布一个包前会执行这个命令指定的脚本。
+- prepublish：和prepare的生命周期一样，这个命令已经过期，不推荐使用了。如果有prepare，它在prepare之前执行。
+- prepublishonly: 在包prepare和pack前，只对publish命令生效。
+- prepack, 在打包出一个tarball前，如命令：npm pack, npm publish。
+- postpack, 在打包出一个tarball，并输出到目的位置后执行。
+
+
+
+一般使用场景有：
+
+- 使用prepublish，在发布前完成coffeescript的编译，js的压缩，依赖资源的获取等等。
+
+
+
+script执行时，npm的一些配置信息和当前的进程信息是可以获取到的：
+
+- path：如果你的package的一个依赖module里有可执行程序，那么可以直接在scripts中使用，因为它们所在的路径在执行script的时候加到path环境变量中。
+- package.json中的变量：package.json中的属性，会设置到环境变量中区，通过process.env.npm_package_xxx获取。比如xxx可以是name, version等等。
+- npm的config参数，也会作为环境变量，通过process.env.npm_config_xxx获取。比如xxx可以是root, prefix, registry等等。
+- npm_lifecycle_event环境变量被设置成当前正在执行的命令名，比如：install, test, prepare等等。
+
+
+
+钩子脚本：
+
+通过在node_modules/.hooks/{eventname}文件夹下放一个可执行文件，就给某个生命周期事件关联上了一个全局的钩子。
+
+
+
+最佳实践：
+
+- 不返回非0值作为错误码然后退出，应该让脚本继续执行，有错误打印相关信息。
+- npm本身能干的事情，不要定义另外的scripts。
+- 检查环境变量中的值来确定在什么地方放置内容，比如检查npm_config_rootbin来获取bin的目录，而不是直接指定死一个位置/usr/local/bin。
+- 不要给脚本加上sudo
+- 不要使用install，使用.gyp来指定编译过程。
+
+### node的模块是什么？
+
+node的模块就是在node_modules文件夹下的，可以通过nodejs的require方法导入的一个文件或者文件夹：
+
+1. 如果是文件，那必须是JavaScript文件。
+2. 如果是文件夹，文件夹中必须包含package.json文件，并且文件中必须包含main属性。
+
+由于模块不一定需要一个package.json（比如单个js文件），所以不是所有的node模块都是包，只有文件夹形式的模块才是一个package。
 
 ### npm命令行工具简介
 
@@ -88,7 +207,7 @@ npm给常用的一些command起了别名，也就是简写形式，一个命令�
 
 
 
-#### 包的安装：npm install
+#### npm install
 
 这个命令用来安装一个包，以及它依赖的包。如果这个包中含有如下三个文件，那么就按如下的优先级从这些文件中确定包的依赖包：
 
@@ -109,11 +228,29 @@ npm给常用的一些command起了别名，也就是简写形式，一个命令�
 
 
 
-#### 配置: npm config
+#### npm config
 
-使用```npm config list -l```查看当前所有配置及默认配置。
+1. 用户级配置：npm config set key value
+2. 全局配置：npm config set key value --global
 
 
+
+#### npm run
+
+是npm run-script的简写。
+
+可以在scripts中定义一些生命周期事件对应的脚本，一个命令的前置和后置命令，使用pre和post，如：
+
+```json
+// 使用npm run compress时, 会在执行compress的前后分别执行pre和post对应的命令
+{
+    "scripts": {
+        "precompress": "压缩前要执行的命令",
+        "compress": "正式执行压缩的命令",
+        "postcompress": "压缩后执行的命令"
+    }
+}
+```
 
 
 
@@ -125,4 +262,27 @@ npm给常用的一些command起了别名，也就是简写形式，一个命令�
 
 
 
-### 使用Scoped模块和团队成员共享私有代码
+### 使用Scoped包和团队成员共享私有代码
+
+#### scope简介
+
+npm从版本2以后，引入了scope的概念，目的是解决包名冲突的问题。给包加上一个scope，那么不同的scope就可以使用相同的包名，彼此不产生冲突。scope的名字一般使用个人或者组织的名字命名。在@和/字符中间的所有字符串就是这个包的scope。比如：```@npm/package-name```，它的scope名就是npm。
+
+
+
+### npm配置代理和镜像
+
+配置代理：
+
+```shell
+npm config set proxy http://username:password@server:port
+npm config set https-proxy https://username:password@server:port
+```
+
+配置镜像:
+
+```shell
+# 淘宝镜像
+npm config set registry https://registry.npm.taobao.org/
+```
+
