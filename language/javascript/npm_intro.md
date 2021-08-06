@@ -57,10 +57,32 @@ npm执行命令时，按从高到低的优先级从如下6个地方获取配置�
 npm会把包安装到你机器上的不同位置，简单来说就是：
 
 1. 本地安装，就会在把包安装在当前路径下的node_modules文件夹下。
-2. 全局-g安装，就会把包安装到node的安装目录下。
+2. 全局-g安装，就会把包安装到prefix对应路径下的node_modules文件夹下，不同的操作系统prefix默认值不同。也可以通过npm config set prefix=xxxx -g改变。
 3. 如果你需要require它，那么就使用本地安装。
 4. 如果你需要在命令行里执行它，那么就全局安装。
 5. 如果两者都需要，那么就本地和全局都安装一下。
+
+#### node_modules文件夹
+
+npm安装包到node_modules文件夹下，如果是本地安装你可以通过require(packagename)来加载包的主模块，也就是package.json中main指定的模块。也可以通过require(packagename/lib/子模块路径)来加载包的其他子模块。scope包会有一个@scopename的文件夹，这个scope名字的包都在这个文件夹下。
+
+
+
+可执行文件全局安装到prefix下（windows）或者prefix/bin下（unix），本地安装到node_modules/.bin下，在scripts脚本中可以直接使用本地安装的可执行文件（本地可执行文件安装目录会添加到PATH环境变量）。
+
+
+
+缓存文件夹默认unix上为~/.npm， windows上为%AppData%\npm-cache。可以通过npm  cache控制。
+
+
+
+本地安装时，npm查找node_modules的逻辑：
+
+1. 从当前路径开始，查看路径中是否包含package.json或者node_modules文件夹。如果存在，那么就把这个路径当做真实的当前路径，安装包到此目录下的node_modules文件夹下，不存在就新建。
+2. 如果不存在就继续按照相同路径查找上级目录，直到根目录。
+3. 如果还是没有找到的话，就在当前路径下新建node_modules文件夹进行安装。
+
+安装时，包先下载到缓存文件夹中，然后unpack到node_modules文件夹下。
 
 
 
@@ -122,6 +144,16 @@ node的package可以是如下的任何一种形式：
 13. workspaces，可选。是一个文件模式的数组，用来设置一系列本地文件系统中的路径。
 
 14. directories: 指定package的lib, bin, docs，man等目录。
+
+
+
+### package locks
+
+使用package-lock.json或者npm-shrinkwrap.json来锁定依赖包的版本，这样方便在新的机器或者新的环境进行移植。其中npm-shrinkwrap.json的优先级高于package.json。类似于python中的pip frozen。
+
+
+
+npm-shrinkwrap.json是通过npm shrinkwrap命令生成的。
 
 ### package.json中的scripts配置
 
