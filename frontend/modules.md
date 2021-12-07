@@ -24,6 +24,35 @@
 
 
 
+### 代码转换和编译
+
+#### Babel
+
+是一个JavaScript的工具链，包含许多的工具，主要用来把ES6及以上的JavaScript版本转换成ES5等早期JavaScript版本代码。
+
+提供：
+
+- 语法转换
+- 通过一个第三方ployfill库把目标环境中没有的JS特性给Polyfill上，使其具有该特性。
+- 源码转换以及其它更多功能。
+
+Babel可以通过插件，支持更多的功能。如：
+
+
+
+
+
+#### Flow
+
+Flow是一个给JS代码增加静态检查功能的npm模块，通过如下的方式进行：
+
+- 写JS代码时，按照Flow的规范，给代码增加类型注解。
+- Flow在后台进程中，对代码进行类型检查，报告相关错误。
+
+
+
+
+
 ### 上传
 
 #### uppy
@@ -38,15 +67,31 @@
 
 
 
-### 打包
+### 构建打包
 
 #### Webpack
 
+[Concepts | webpack](https://webpack.js.org/concepts/)
+
 #### Rollup
+
+[rollup.js (rollupjs.org)](https://rollupjs.org/guide/en/)
 
 #### Parcel
 
+[Parcel Documentation | Parcel 中文网 (parceljs.cn)](https://v2.parceljs.cn/docs/)
+
 #### Browserify
+
+[Browserify](https://browserify.org/)
+
+#### esbuild
+
+[esbuild - An extremely fast JavaScript bundler](https://esbuild.github.io/)
+
+#### Vite
+
+[Home | Vite (vitejs.dev)](https://vitejs.dev/)
 
 
 
